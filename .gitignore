@@ -1,0 +1,22 @@
+# Données (trop volumineuses / licence CC-BY-NC — à télécharger séparément)
+data/images/
+data/*.csv
+data/splits/
+
+# Modèles et index (trop volumineux pour Git — à régénérer localement)
+outputs/model.pt
+outputs/faiss.index
+outputs/reference_index.csv
+# outputs/eda/ et outputs/metrics.json restent versionnés : ce sont
+# les preuves de résultats à montrer sur le repo (graphiques, scores).
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Environnement
+.env
+.DS_Store

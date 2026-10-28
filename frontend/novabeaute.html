@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaBeauté — Repérage de grains de beauté (prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2F4F1; --card:#FFFFFF; --ink:#16231F; --ink-soft:#4B5B56; --ink-faint:#8A9691;
+    --line:#DAE1DB; --amber:#B9793A; --amber-soft:#F1E3D1; --rose:#B5504A; --rose-soft:#F4DEDB;
+    --sage:#5F7C68; --sage-soft:#E1EAE1;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.55;}
+  .app{max-width:900px;margin:0 auto;padding:0 28px 80px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:28px 0 20px;border-bottom:1px solid var(--line);}
+  .brand{font-family:'Fraunces',serif;font-weight:500;font-size:22px;}
+  .brand em{font-style:italic;color:var(--amber);}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--rose);border:1px solid var(--rose);padding:4px 8px;}
+  .banner{margin:20px 0 0;padding:13px 16px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--rose);font-size:13px;color:var(--ink-soft);}
+  .banner b{color:var(--ink);}
+  .hero{padding:50px 0 30px;}
+  .hero h1{font-family:'Fraunces',serif;font-weight:500;font-size:32px;line-height:1.15;margin:0 0 14px;}
+  .hero p{font-size:14.5px;color:var(--ink-soft);max-width:520px;}
+  .lab{border:1px solid var(--line);background:var(--card);margin-top:30px;}
+  .lab-inner{padding:28px;}
+  .dropzone{border:1.5px dashed var(--line);padding:34px 18px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:170px;justify-content:center;}
+  .dropzone:hover,.dropzone.drag{border-color:var(--amber);background:var(--amber-soft);}
+  .dropzone .dz-text{font-size:13px;color:var(--ink-soft);}
+  .dropzone .dz-text b{color:var(--ink);text-decoration:underline;}
+  .dropzone input{display:none;}
+  .preview-wrap{position:relative;max-width:300px;margin:0 auto;}
+  .preview-wrap img{width:100%;display:block;border:1px solid var(--line);}
+  .preview-clear{position:absolute;top:8px;right:8px;background:var(--ink);color:#fff;border:none;width:26px;height:26px;cursor:pointer;}
+  .run-btn{margin-top:16px;width:100%;padding:12px;background:var(--ink);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;}
+  .run-btn:hover:not(:disabled){background:var(--amber);}
+  .run-btn:disabled{background:var(--ink-faint);cursor:not-allowed;}
+  .field-note{font-size:11px;color:var(--ink-faint);margin-top:8px;text-align:center;}
+  .results-inner{padding:28px;border-top:1px solid var(--line);}
+  .block-title{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 12px;}
+  .class-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .class-row:last-child{border-bottom:none;}
+  .class-row .bar-wrap{flex:1;height:6px;background:var(--line);margin:0 14px;position:relative;}
+  .class-row .bar{position:absolute;left:0;top:0;height:100%;background:var(--amber);}
+  .sim-card{display:flex;justify-content:space-between;padding:10px 14px;border:1px solid var(--line);margin-bottom:8px;font-size:13px;}
+  .result-disclaimer{margin-top:20px;padding:13px 15px;background:var(--rose-soft);border-left:3px solid var(--rose);font-size:12px;color:#6E3630;}
+  .empty-state{padding:40px 30px;text-align:center;color:var(--ink-faint);font-size:13px;}
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-faint);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">Nova<em>Beauté</em></div>
+    <span class="badge">Prototype expérimental</span>
+  </div>
+
+  <div class="banner">
+    <b>Projet éducatif — non validé cliniquement.</b> Ce site s'appuie sur un modèle entraîné sur le jeu de données public HAM10000, dans un cadre de démonstration technique. Il ne remplace pas un avis médical.
+  </div>
+
+  <div class="hero">
+    <h1>Repérage de grains de beauté — démo technique</h1>
+    <p>Cette interface envoie une photo à un modèle de classification entraîné localement (voir le dépôt GitHub) et retrouve les images les plus similaires dans la base de référence.</p>
+  </div>
+
+  <div class="lab">
+    <div class="lab-inner">
+      <div id="dzWrap">
+        <label class="dropzone" for="fileInput">
+          <span class="dz-text"><b>Choisir un fichier</b> ou glisser une image ici</span>
+          <input type="file" id="fileInput" accept="image/*">
+        </label>
+      </div>
+      <button class="run-btn" id="runBtn" disabled>Lancer l'analyse</button>
+      <p class="field-note">Nécessite l'API locale lancée sur <code>http://localhost:8000</code> (voir README).</p>
+    </div>
+    <div id="resultsArea"></div>
+  </div>
+
+  <footer>NovaBeauté — projet portfolio, dataset HAM10000 (CC-BY-NC), non destiné à un usage clinique.</footer>
+</div>
+
+<script>
+const API_URL = "http://localhost:8000/analyze";
+
+const fileInput = document.getElementById('fileInput');
+const dzWrap = document.getElementById('dzWrap');
+const runBtn = document.getElementById('runBtn');
+const resultsArea = document.getElementById('resultsArea');
+let uploadedFile = null;
+
+function handleFile(file){
+  if(!file || !file.type.startsWith('image/')) return;
+  uploadedFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    dzWrap.innerHTML = `
+      <div class="preview-wrap">
+        <img src="${e.target.result}" alt="Aperçu">
+        <button class="preview-clear" id="clearBtn">✕</button>
+      </div>`;
+    document.getElementById('clearBtn').addEventListener('click', resetUpload);
+    runBtn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetUpload(){
+  uploadedFile = null;
+  dzWrap.innerHTML = `
+    <label class="dropzone" for="fileInput">
+      <span class="dz-text"><b>Choisir un fichier</b> ou glisser une image ici</span>
+      <input type="file" id="fileInput" accept="image/*">
+    </label>`;
+  runBtn.disabled = true;
+  bindFileInput();
+}
+
+function bindFileInput(){
+  const input = document.getElementById('fileInput');
+  const dz = input.closest('.dropzone');
+  input.addEventListener('change', (e)=>handleFile(e.target.files[0]));
+  dz.addEventListener('dragover', (e)=>{e.preventDefault(); dz.classList.add('drag');});
+  dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+  dz.addEventListener('drop', (e)=>{e.preventDefault(); dz.classList.remove('drag'); handleFile(e.dataTransfer.files[0]);});
+}
+bindFileInput();
+
+async function runAnalysis(){
+  if(!uploadedFile) return;
+  runBtn.disabled = true;
+  runBtn.textContent = 'Analyse en cours…';
+  resultsArea.innerHTML = `<div class="empty-state">Appel au modèle local…</div>`;
+
+  try{
+    const formData = new FormData();
+    formData.append('file', uploadedFile);
+
+    const response = await fetch(API_URL, { method: 'POST', body: formData });
+    if(!response.ok) throw new Error('Erreur API');
+    const data = await response.json();
+    renderResults(data);
+
+  }catch(err){
+    console.error(err);
+    resultsArea.innerHTML = `<div class="empty-state">Impossible de contacter l'API locale. Vérifiez qu'elle tourne sur localhost:8000 (voir README du dépôt).</div>`;
+  }finally{
+    runBtn.disabled = false;
+    runBtn.textContent = "Lancer l'analyse";
+  }
+}
+
+function renderResults(data){
+  const classRows = data.classification.map(c => `
+    <div class="class-row">
+      <span>${c.label}</span>
+      <div class="bar-wrap"><div class="bar" style="width:${c.confidence}%"></div></div>
+      <span>${c.confidence}%</span>
+    </div>`).join('');
+
+  const simCards = data.similar_cases.map(s => `
+    <div class="sim-card"><span>${s.label}</span><span>${s.similarity}% similaire</span></div>`).join('');
+
+  resultsArea.innerHTML = `
+    <div class="results-inner">
+      <p class="block-title">Classification</p>
+      ${classRows}
+      <p class="block-title" style="margin-top:22px;">Cas similaires dans la base de référence</p>
+      ${simCards}
+      <div class="result-disclaimer"><b>${data.disclaimer}</b></div>
+    </div>`;
+}
+
+runBtn.addEventListener('click', runAnalysis);
+</script>
+</body>
+</html>
